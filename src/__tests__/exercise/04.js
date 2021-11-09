@@ -4,24 +4,33 @@
 import * as React from 'react'
 import {render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import faker from 'faker'
 import Login from '../../components/login'
 
+function buildLoginForm(overrides) {
+  return {
+    username: faker.internet.userName(),
+    password: faker.internet.password(),
+    ...overrides,
+  }
+}
+
 test('submitting the form calls onSubmit with username and password', () => {
-  let submittedData
-  const handleSubmit = data => (submittedData = data)
+  const handleSubmit = jest.fn()
   render(<Login onSubmit={handleSubmit} />)
 
-  const username = 'chucknorris'
-  const password = 'i need no password'
+  const {username, password} = buildLoginForm('chucknorris')
 
   userEvent.type(screen.getByLabelText(/username/i), username)
   userEvent.type(screen.getByLabelText(/password/i), password)
   userEvent.click(screen.getByText(/submit/i))
 
-  expect(submittedData).toEqual({
+  expect(handleSubmit).toHaveBeenLastCalledWith({
     username,
     password,
   })
+
+  expect(handleSubmit).toBeCalledTimes(1)
   // screen.debug()
   // 🐨 create a variable called "submittedData" and a handleSubmit function that
   // accepts the data and assigns submittedData to the data that was submitted
