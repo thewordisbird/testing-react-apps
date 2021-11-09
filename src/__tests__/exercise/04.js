@@ -7,6 +7,22 @@ import userEvent from '@testing-library/user-event'
 import Login from '../../components/login'
 
 test('submitting the form calls onSubmit with username and password', () => {
+  let submittedData
+  const handleSubmit = data => (submittedData = data)
+  render(<Login onSubmit={handleSubmit} />)
+
+  const username = 'chucknorris'
+  const password = 'i need no password'
+
+  userEvent.type(screen.getByLabelText(/username/i), username)
+  userEvent.type(screen.getByLabelText(/password/i), password)
+  userEvent.click(screen.getByText(/submit/i))
+
+  expect(submittedData).toEqual({
+    username,
+    password,
+  })
+  // screen.debug()
   // 🐨 create a variable called "submittedData" and a handleSubmit function that
   // accepts the data and assigns submittedData to the data that was submitted
   // 💰 if you need a hand, here's what the handleSubmit function should do:
