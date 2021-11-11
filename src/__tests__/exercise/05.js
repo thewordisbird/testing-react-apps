@@ -47,6 +47,7 @@ const server = setupServer(...handlers)
 
 // 🐨 before all the tests, start the server with `server.listen()`
 beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
 // 🐨 after all the tests, stop the server with `server.close()`
 afterAll(() => server.close())
 
@@ -68,4 +69,41 @@ test(`logging in displays the user's username`, async () => {
   // we render the username.
   // 🐨 assert that the username is on the screen
   expect(screen.getByText(username)).toBeInTheDocument()
+})
+
+test('omitting the password results in an error', async () => {
+  render(<Login />)
+  const {username} = buildLoginForm()
+
+  userEvent.type(screen.getByLabelText(/username/i), username)
+  // not going to fill in password
+  userEvent.click(screen.getByRole('button', {name: /submit/i}))
+
+  await waitForElementToBeRemoved(() => screen.getByLabelText(/loading/i))
+
+  // allows jest to auto fill the error message based on a snapshot. If
+  // jest notices a delta, it will suggest updating the snapshot.
+  expect(screen.getByRole('alert').textContent).toMatchInlineSnapshot(
+    `"password is required"`,
+  )
+})
+
+test('an unexpexted server error results in an error', async () => {
+  const TEST_ERROR_MESSAGE = 'Oh no, something bad happened!'
+  server.use(
+    rest.post(
+      'https://auth-provider.example.com/api/login',
+      async (req, res, ctx) => {
+        return res(ctx.status(500), ctx.json({message: TEST_ERROR_MESSAGE}))
+      },
+    ),
+  )
+  render(<Login />)
+  userEvent.click(screen.getByRole('button', {name: /submit/i}))
+
+  await waitForElementToBeRemoved(() => screen.getByLabelText(/loading/i))
+
+  // allows jest to auto fill the error message based on a snapshot. If
+  // jest notices a delta, it will suggest updating the snapshot.
+  expect(screen.getByRole('alert')).toHaveTextContent(TEST_ERROR_MESSAGE)
 })
