@@ -46,6 +46,9 @@ test('displays the users current location', async () => {
   render(<Location />)
   expect(screen.getByLabelText(/loading/i)).toBeInTheDocument()
 
+  // need to wrap in act because the callback in getCurrentPosition is
+  // updating the state and we want to make sure all state updates
+  // are complete before moving on.
   await act(async () => {
     resolve()
     await promise
