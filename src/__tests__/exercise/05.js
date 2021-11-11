@@ -9,6 +9,7 @@ import {build, fake} from '@jackfranklin/test-data-bot'
 // 🐨 you'll need to import rest from 'msw' and setupServer from msw/node
 import {rest} from 'msw'
 import {setupServer} from 'msw/node'
+import {handlers} from '../../test/server-handlers'
 import Login from '../../components/login-submission'
 
 const buildLoginForm = build({
@@ -26,16 +27,26 @@ const buildLoginForm = build({
 // )
 // you'll want to respond with an JSON object that has the username.
 // 📜 https://mswjs.io/
-const server = setupServer(
-  rest.post('/login-submission', (req, res, ctx) => {
-    const {username} = buildLoginForm()
-    return res(ctx.json({username: username}))
-  }),
-)
+
+// Use shared handlers instead
+const server = setupServer(...handlers)
+// const server = setupServer(
+//   rest.post('/login-submission', async (req, res, ctx) => {
+//     if (!req.body.password) {
+//       return res(ctx.status(400), ctx.json({message: 'password required'}))
+//     }
+
+//     if (!req.body.username) {
+//       return res(ctx.status(400), ctx.json({message: 'username required'}))
+//     }
+
+//     const {username} = buildLoginForm()
+//     return res(ctx.json({username: username}))
+//   }),
+// )
 
 // 🐨 before all the tests, start the server with `server.listen()`
 beforeAll(() => server.listen())
-beforeEach(() => server.resetHandlers())
 // 🐨 after all the tests, stop the server with `server.close()`
 afterAll(() => server.close())
 
