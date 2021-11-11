@@ -52,9 +52,9 @@ test(`logging in displays the user's username`, async () => {
   // spinner has an aria-label of "loading" for accessibility purposes, so
   // 🐨 wait for the loading spinner to be removed using waitForElementToBeRemoved
   // 📜 https://testing-library.com/docs/dom-testing-library/api-async#waitforelementtoberemoved
-  await waitForElementToBeRemoved(() => screen.getByLabelText('loading'))
+  await waitForElementToBeRemoved(() => screen.getByLabelText(/loading/i))
   // once the login is successful, then the loading spinner disappears and
   // we render the username.
   // 🐨 assert that the username is on the screen
-  expect()
+  expect(screen.getByText(username)).toBeInTheDocument()
 })
