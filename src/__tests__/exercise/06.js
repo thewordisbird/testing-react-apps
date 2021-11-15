@@ -3,24 +3,26 @@
 
 import * as React from 'react'
 import {render, screen, act} from '@testing-library/react'
+import {useCurrentPosition} from 'react-use-geolocation'
 import Location from '../../examples/location'
 
 // 🐨 set window.navigator.geolocation to an object that has a getCurrentPosition mock function
-beforeAll(() => {
-  window.navigator.geolocation = {
-    getCurrentPosition: jest.fn(),
-  }
-})
+jest.mock('react-use-geolocation')
+// beforeAll(() => {
+//   window.navigator.geolocation = {
+//     getCurrentPosition: jest.fn(),
+//   }
+// })
 // 💰 I'm going to give you this handy utility function
 // it allows you to create a promise that you can resolve/reject on demand.
-function deferred() {
-  let resolve, reject
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return {promise, resolve, reject}
-}
+// function deferred() {
+//   let resolve, reject
+//   const promise = new Promise((res, rej) => {
+//     resolve = res
+//     reject = rej
+//   })
+//   return {promise, resolve, reject}
+// }
 // 💰 Here's an example of how you use this:
 // const {promise, resolve, reject} = deferred()
 // promise.then(() => {/* do something */})
@@ -36,13 +38,22 @@ test('displays the users current location', async () => {
       longitude: 139,
     },
   }
-  const {promise, resolve} = deferred()
-  // mock getCurrentPosition.
-  window.navigator.geolocation.getCurrentPosition.mockImplementation(
-    callback => {
-      promise.then(() => callback(fakePosition))
-    },
-  )
+
+  let setReturnValue
+  function useMockCurrentPosition() {
+    const [state, setState] = React.useState([])
+    setReturnValue = setState
+    return state
+  }
+  useCurrentPosition.mockImplementation(useMockCurrentPosition)
+
+  // const {promise, resolve} = deferred()
+  // // mock getCurrentPosition.
+  // window.navigator.geolocation.getCurrentPosition.mockImplementation(
+  //   callback => {
+  //     promise.then(() => callback(fakePosition))
+  //   },
+  // )
   render(<Location />)
   expect(screen.getByLabelText(/loading/i)).toBeInTheDocument()
 
@@ -50,8 +61,9 @@ test('displays the users current location', async () => {
   // updating the state and we want to make sure all state updates
   // are complete before moving on.
   await act(async () => {
-    resolve()
-    await promise
+    setReturnValue([fakePosition])
+    // resolve()
+    // await promise
   })
   // screen.debug()
 
